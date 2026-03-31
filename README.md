@@ -14,10 +14,6 @@ Para atender ao requisito de que diversas áreas (Fraude, Cartões, Seguros) pre
 - Quando uma conta é criada, o `AccountHandler` publica um `AccountCreatedEvent`
 - Handlers independentes (`FraudDetectionHandler`, `CardServiceHandler`) reagem a esses eventos
 
-**Benefício:**  
-A regra de negócio de "Cartões" não polui o código de "Onboarding", respeitando o **Single Responsibility Principle (SRP)**.
-Respeito total ao **Open/Closed Principle (SOLID)**. Novas áreas podem ser adicionadas ao banco sem alterar uma única linha de código do cadastro de contas.
----
 
 ### 2. 💰 Otimização de Custos AWS (Estratégia de Cache)
 
@@ -45,13 +41,40 @@ Para evitar cobranças excessivas de leitura no banco de dados (**MySQL/RDS**) p
 
 ---
 
+## Solid
+📐 Aplicando o S.O.L.I.D.
+  - S - Single Responsibility Principle (Princípio da Responsabilidade Única)* - A regra de negócio de "Cartões" não polui o código de "Onboarding".
+    
+  - O - Open/Closed Principle (Princípio Aberto/Fechado)
+    - No MediatR: Se amanhã o banco decidir que a área de "Seguros" também precisa saber sobre novas contas, você não altera o AccountHandler. Você apenas cria um novo InsuranceHandler que "escuta" o mesmo evento. O sistema está fechado para modificação, mas aberto para extensão.
+
+    - Validation Behavior: Adicionamos validação a todos os comandos sem mexer em um único Handler.
+
+  - L - Liskov Substitution Principle (Substituição de Liskov)
+    - Interfaces de Repositório: O seu AccountRepository implementa IAccountRepository. Se em um teste unitário você trocar o repositório real por um Mock, o sistema continua funcionando perfeitamente. O comportamento esperado da interface é respeitado por qualquer implementação.
+
+  - I - Interface Segregation Principle (Segregação de Interface)
+    - Interfaces Específicas: Em vez de uma interface gigante IBankService que faz tudo, temos IAccountRepository e ICacheService. Cada classe só depende do que realmente usa. Seu Handler não sabe nada sobre "Conexão com Banco", ele só conhece a interface de persistência.
+
+  - D - Dependency Inversion Principle (Inversão de Dependência)
+    - Injeção de Dependência: O seu AccountsController não faz new AccountRepository(). Ele recebe IMediator pelo construtor. O AccountHandler recebe IAccountRepository.
+
+Conceito chave: O seu código de alto nível (Aplicação) não depende de detalhes de baixo nível (MySQL). Ambos dependem de abstrações (Interfaces). Isso permitiu, por exemplo, trocar o Redis por um Cache em Memória no Program.cs sem mudar uma linha de código no Handler.
+
 ## 📐 Arquitetura e Padrões
 
 A solução segue os princípios de:
 
 - **Clean Architecture**
 - **DDD (Domain-Driven Design)**
+  -Entidades de Domínio: A classe Account não é apenas um "balde de dados" (Anêmico). Ela possui lógica própria, como o construtor que garante um ID e o estado inicial ativo.
 
+  - Repositórios (Interfaces): Definimos IAccountRepository no Domínio. Isso diz ao sistema o que ele precisa fazer com os dados, sem se importar como (se é MySQL, MongoDB ou uma lista em memória).
+
+  - Camada de Aplicação: Onde estão os Handlers e Commands. Eles orquestram a lógica: validam a entrada, chamam o repositório e disparam eventos. É aqui que o "processo de negócio" acontece.
+
+  - Eventos de Domínio: O uso de AccountCreatedEvent reflete o conceito de Linguagem Ubíqua. Quando o pessoal de "Fraude" ou "Cartões" diz "precisamos saber quando uma conta é criada", o código reflete exatamente esse evento.
+  
 ### 📂 Camadas
 
 - **Domain**
