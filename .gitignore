@@ -52,3 +52,21 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+## Visual Studio 
+.vs/
+[Bb]in/
+[Ob]j/
+*.user
+*.userosscache
+*.sln.docstates
+
+## Resharper / Rider
+_ReSharper*/
+*.resharper
+*.dotSettings.user
+
+## Visual Studio Code
+.vscode/
+
+## Arquivos de Configuração Sensíveis
+appsettings.Development.json
