@@ -17,7 +17,11 @@ public static class DependencyInjection
         var serverVersion = new MySqlServerVersion(new Version(8, 0, 35));
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseMySql(connectionString, serverVersion));
+            options.UseMySql(
+                connectionString, 
+                serverVersion,
+                mySqlOptions => mySqlOptions.MigrationsAssembly("OnboardingCreateAccount.Infrastructure")
+            ));
 
         services.AddDistributedMemoryCache();
 
