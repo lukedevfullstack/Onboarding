@@ -128,10 +128,31 @@ No appsettings.json:
   "DefaultConnection": "server=localhost;port=3306;database=onboarding_db;user=root;password=123456"
 }
 ```
-## 🗄️ Rodar Migrations
+
+## 🗄️ Configurar o banco
+- Rodar Migrations
 
 ```bash
 dotnet ef database update
+```
+
+- Ou se preferir rode esse script no banco 
+```
+-- 1. Criação do Banco de Dados
+CREATE DATABASE IF NOT EXISTS KrtBankDb;
+USE KrtBankDb;
+
+-- 2. Criação da Tabela Account
+CREATE TABLE IF NOT EXISTS Accounts (
+    Id CHAR(36) NOT NULL,
+    OwnerName VARCHAR(150) NOT NULL,
+    Document VARCHAR(14) NOT NULL,
+    IsActive TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (Id),
+    -- Índice Único: Evita CPFs duplicados e acelera buscas (Economia de CPU na AWS)
+    UNIQUE INDEX IX_Accounts_Document (Document)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 ```
 
 ## ▶️ Executar a API
