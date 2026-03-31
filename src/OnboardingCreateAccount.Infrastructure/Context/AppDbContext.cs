@@ -1,11 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OnboardingCreateAccount.Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
+using OnboardingCreateAccount.Domain.Entities;
 
 namespace OnboardingCreateAccount.Infrastrsucture.Context;
 
@@ -24,5 +18,7 @@ public class AppDbContext : DbContext
             builder.Property(a => a.Document).IsRequired().HasMaxLength(14);
             builder.HasIndex(a => a.Document).IsUnique();
         });
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }

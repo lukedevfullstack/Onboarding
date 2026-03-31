@@ -2,12 +2,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnboardingCreateAccount.Domain.Interfaces;
-using OnboardingCreateAccount.Infrastructure.Context;
 using OnboardingCreateAccount.Infrastructure.Repositories;
 using OnboardingCreateAccount.Infrastructure.Cache;
 using OnboardingCreateAccount.Infrastrsucture.Context;
 
-namespace OnboardingCreateAccount.Infrastructure.Context;
+namespace OnboardingCreateAccount.Infrastructure.Configuration;
 
 public static class DependencyInjection
 {
@@ -15,14 +14,12 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+        var serverVersion = new MySqlServerVersion(new Version(8, 0, 35));
 
-        services.AddStackExchangeRedisCache(options =>
-        {
-           options.Configuration = configuration.GetConnectionString("Redis");
-            options.InstanceName = "KrtBank_";
-        });
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseMySql(connectionString, serverVersion));
+
+        services.AddDistributedMemoryCache();
 
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ICacheService, RedisCacheService>();

@@ -2,9 +2,9 @@
 using OnboardingCreateAccount.Application.DTOs;
 using OnboardingCreateAccount.Application.Queries;
 using MediatR;
-using OnboardingCreateAccount.Domain;
 using OnboardingCreateAccount.Domain.Interfaces;
 using OnboardingCreateAccount.Domain.Events;
+using OnboardingCreateAccount.Domain.Entities;
 
 namespace OnboardingCreateAccount.Application.Handler;
 
@@ -25,42 +25,38 @@ public class AccountHandler :
         _mediator = mediator;
     }
 
-    // CREATE
     public async Task<AccountResponse> Handle(CreateAccountCommand request, CancellationToken ct)
     {
+        var alreadyExists = await _repository.ExistsByDocumentAsync(request.Document);
+        if (alreadyExists)
+            throw new Exception("Já existe uma conta cadastrada com este CPF.");
+
         var account = new Account(request.OwnerName, request.Document);
 
         await _repository.AddAsync(account);
 
-        // Notifica outras áreas (Fraude, Cartões) de forma assíncrona
         await _mediator.Publish(new AccountCreatedEvent(account.Id, account.OwnerName, account.Document), ct);
 
         return new AccountResponse(account.Id, account.OwnerName, account.Document, account.IsActive);
     }
 
-    // READ (Otimizado para Custo AWS)
     public async Task<AccountResponse?> Handle(GetAccountByIdQuery request, CancellationToken ct)
     {
-        // Chave de cache baseada no ID e no Dia Atual (yyyyMMdd)
         string cacheKey = $"account:{request.Id}:{DateTime.UtcNow:yyyyMMdd}";
 
-        // 1. Tenta recuperar do Cache para evitar custo de consulta no DB
         var cached = await _cache.GetAsync<AccountResponse>(cacheKey);
         if (cached != null) return cached;
 
-        // 2. Se não estiver no cache, vai ao banco de dados (Custo AWS)
         var account = await _repository.GetByIdAsync(request.Id);
         if (account == null) return null;
 
         var response = new AccountResponse(account.Id, account.OwnerName, account.Document, account.IsActive);
 
-        // 3. Salva no Cache com expiração para o final do dia
         await _cache.SetAsync(cacheKey, response, TimeSpan.FromDays(1));
 
         return response;
     }
 
-    // UPDATE
     public async Task<AccountResponse> Handle(UpdateAccountCommand request, CancellationToken ct)
     {
         var account = await _repository.GetByIdAsync(request.Id);
@@ -69,7 +65,6 @@ public class AccountHandler :
         account.Update(request.OwnerName, request.Document, request.IsActive);
         await _repository.UpdateAsync(account);
 
-        // Invalida o cache para que a próxima consulta pegue o dado novo
         await _cache.RemoveAsync($"account:{request.Id}:{DateTime.UtcNow:yyyyMMdd}");
 
         await _mediator.Publish(new AccountUpdatedEvent(account.Id, account.Document, account.IsActive), ct);
@@ -77,7 +72,6 @@ public class AccountHandler :
         return new AccountResponse(account.Id, account.OwnerName, account.Document, account.IsActive);
     }
 
-    // DELETE
     public async Task<bool> Handle(DeleteAccountCommand request, CancellationToken ct)
     {
         await _repository.DeleteAsync(request.Id);

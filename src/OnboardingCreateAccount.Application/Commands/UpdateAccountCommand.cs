@@ -1,6 +1,12 @@
-﻿using OnboardingCreateAccount.Application.DTOs;
-using MediatR;
+﻿using MediatR;
+using OnboardingCreateAccount.Application.DTOs;
 
 namespace OnboardingCreateAccount.Application.Commands;
 
-public record UpdateAccountCommand(Guid Id, string OwnerName, string Document, bool IsActive) : IRequest<AccountResponse>;
+public record UpdateAccountCommand : IRequest<AccountResponse>
+{
+    public Guid Id { get; set; }
+    public string OwnerName { get; init; } = string.Empty;
+    public string Document { get; init; } = string.Empty;
+    public bool IsActive { get; init; }
+}

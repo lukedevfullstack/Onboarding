@@ -2,4 +2,7 @@
 
 namespace OnboardingCreateAccount.Application.Commands;
 
-public record DeleteAccountCommand(Guid Id) : IRequest<bool>;
+public record DeleteAccountCommand : IRequest<bool>
+{
+    public Guid Id { get; set; }
+}

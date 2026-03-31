@@ -1,31 +1,32 @@
-﻿using OnboardingCreateAccount.Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using OnboardingCreateAccount.Domain.Entities;
+using FluentAssertions;
 
-namespace OnboardingCreateAccount.Tests.Domain;
+namespace OnboardingCreateAccount.UnitTests.Domain;
 
 public class AccountTests
 {
     [Fact]
-    public void Constructor_Should_Initialize_Correctly()
+    public void NewAccount_ShouldBeActiveByDefault()
     {
         // Act
-        var account = new Account("Bruce Wayne", "123.456.789-00");
+        var account = new Account("Lucas", "12345678901");
 
         // Assert
-        Assert.NotEqual(Guid.Empty, account.Id);
-        Assert.True(account.IsActive);
-        Assert.Equal("Bruce Wayne", account.OwnerName);
+        account.IsActive.Should().BeTrue();
+        account.Id.Should().NotBeEmpty();
     }
 
     [Fact]
-    public void Deactivate_Should_Change_Status_To_False()
+    public void Update_ShouldChangeAccountData()
     {
-        var account = new Account("Test", "000");
-        account.Deactivate();
-        Assert.False(account.IsActive);
+        // Arrange
+        var account = new Account("Antigo", "111");
+
+        // Act
+        account.Update("Novo Nome", "222", false);
+
+        // Assert
+        account.OwnerName.Should().Be("Novo Nome");
+        account.IsActive.Should().BeFalse();
     }
 }

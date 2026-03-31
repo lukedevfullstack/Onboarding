@@ -1,6 +1,10 @@
-﻿using OnboardingCreateAccount.Application.DTOs;
-using MediatR;
+﻿using MediatR;
+using OnboardingCreateAccount.Application.DTOs;
 
 namespace OnboardingCreateAccount.Application.Commands;
 
-public record CreateAccountCommand(string OwnerName, string Document) : IRequest<AccountResponse>;
+public record CreateAccountCommand : IRequest<AccountResponse>
+{
+    public string OwnerName { get; init; } = string.Empty;
+    public string Document { get; init; } = string.Empty;
+}

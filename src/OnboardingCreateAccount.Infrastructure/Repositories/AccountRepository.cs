@@ -1,14 +1,18 @@
-﻿using OnboardingCreateAccount.Domain;
+﻿using Microsoft.EntityFrameworkCore;
+using OnboardingCreateAccount.Domain.Entities;
 using OnboardingCreateAccount.Domain.Interfaces;
 using OnboardingCreateAccount.Infrastrsucture.Context;
-using System;
 
 namespace OnboardingCreateAccount.Infrastructure.Repositories;
 
 public class AccountRepository : IAccountRepository
 {
     private readonly AppDbContext _context;
-    public AccountRepository(AppDbContext context) => _context = context;
+
+    public AccountRepository(AppDbContext context)
+    {
+        _context = context;
+    }
 
     public async Task AddAsync(Account account)
     {
@@ -16,29 +20,29 @@ public class AccountRepository : IAccountRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task DeleteAsync(Guid id)
+    public async Task<Account?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _context.Accounts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    public Task<bool> ExistsByDocumentAsync(string document)
+    public async Task UpdateAsync(Account account)
     {
-        throw new NotImplementedException();
+        _context.Accounts.Update(account);
+        await _context.SaveChangesAsync();
     }
 
-    public Task<IEnumerable<Account>> GetAllAsync()
+    public async Task DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        await _context.Accounts
+            .Where(a => a.Id == id)
+            .ExecuteDeleteAsync();
     }
 
-    public Task<Account?> GetByIdAsync(Guid id)
+    public async Task<bool> ExistsByDocumentAsync(string document)
     {
-        throw new NotImplementedException();
+        return await _context.Accounts
+            .AnyAsync(a => a.Document == document);
     }
-
-    public Task UpdateAsync(Account account)
-    {
-        throw new NotImplementedException();
-    }
-    // Implementar Update, Delete e GetById...
 }

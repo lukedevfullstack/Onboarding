@@ -1,4 +1,4 @@
-﻿namespace OnboardingCreateAccount.Domain;
+﻿namespace OnboardingCreateAccount.Domain.Entities;
 
 public class Account
 {
